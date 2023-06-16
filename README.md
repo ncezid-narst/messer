@@ -106,7 +106,7 @@ As of 6/16/2023, this workflow was developed on Nextflow version 22.10.6.
 ## Parameters
 Parameters for each process can be changed in `messer.config` under the first bracketed section `params`. Check out [Resources](#resources) for links to each process's main github page to learn more about process-specific parameters.
 
-Prior to running stylo, make sure the INITIAL PARAMETERS are set accurately - the default settings are as follows:
+Prior to running messer, make sure the INITIAL PARAMETERS are set accurately - the default settings are as follows:
 ```java
 	//Initial parameters
 	assembly = ''
@@ -144,7 +144,7 @@ Configuration settings for each profile can be changed in `messer.config` under 
 
 You can see how profiles are used in the next section **Usage**.
 
-NOTE: The default profile settings were mostly pulled from recommendations made by CDC Scicomp in their Nextflow training called 'Reproducible, scalable, and shareable analysis workflows with Nextflow'. There is a good chance you will have to create/modify your own profile to run stylo using your institution's computing environment. Check out [Resources](#resources) to learn more about creating profiles.
+NOTE: The default profile settings were mostly pulled from recommendations made by CDC Scicomp in their Nextflow training called 'Reproducible, scalable, and shareable analysis workflows with Nextflow'. There is a good chance you will have to create/modify your own profile to run messer using your institution's computing environment. Check out [Resources](#resources) to learn more about creating profiles.
 
 ## Usage
 Once you've made the necessary changes to the configuration file to run the workflow on your computing environment and have set up inital parameters, you can run messer just as you would any nextflow workflow:
