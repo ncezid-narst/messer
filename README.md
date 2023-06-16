@@ -127,7 +127,7 @@ CONTIG: Name of contig in draft Flye assembly containing target plasmid replicon
 SIZE: Predicted size of plasmid contig either based on reference sequence or SME knowledge  
 REPLICON: Name of plasmid replicon  
 
-`reads`: Filepath (relative or absolute) to raw ONT reads (not filtered or downsampled)
+`reads`: Filepath (relative or absolute) to raw ONT reads (not filtered or downsampled)  
 `outdir`: Name of messer output directory. Default is set to `messer`.
 
 ## Processes
