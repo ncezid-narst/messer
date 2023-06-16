@@ -194,7 +194,7 @@ messer
         └── reads
 ```
 ## Troubleshooting
-1. **Plasmid contig is still the wrong size**
+1. **Plasmid contig is still the wrong size**  
 This can occur due to a number of upstream factors. In our example, Col8282's plasmid contig comes out the wrong size:
 ```bash
 messer/PNUSAS002131/Col8282/flye/assembly_info.txt:
@@ -215,7 +215,7 @@ The third option in this case happens to correct the issue for Col8282:
 contig_1        4090    113     Y       Y       4       *       1
 ```
 
-2. **The assembly process failed**
+2. **The assembly process failed**  
 This can occur because of bad luck as mentioned before, or because flye's run parameters need to be adjusted. By default, the value for flye's `--min-overlap` flag is calculated automatically based on average read length. If you have an abundance of long reads, this could set the value much too high, preventing the assembly of smaller contigs. Try setting the parameter `flye_minoverlap` in `messer.config` to a value lower than the expected size of the plasmid contig i.e. 2000 or 1000 for an expected size of ~2kb.
 
 Additionally, it might be worth narrowing the window of acceptable read lengths filtered by nanoq. Setting `nanoq_max_length` in `messer.config` to just above the expected size of the plasmid contig could help discourage flye from being overzealous in finding the overlaps that multiply the contig size. This could have a negative effect on coverage though, so tread with caution.
