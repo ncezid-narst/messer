@@ -36,6 +36,7 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
 include { INPUT_CHECK } from '../subworkflows/local/input_check'
+include { NANOQ       } from '../modules/local/nanoq'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,18 +47,20 @@ include { INPUT_CHECK } from '../subworkflows/local/input_check'
 //
 // MODULE: Installed directly from nf-core/modules
 //
-include { FASTQC                      } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 include { CUSTOM_DUMPSOFTWAREVERSIONS } from '../modules/nf-core/custom/dumpsoftwareversions/main'
+include { FLYE                        } from '../modules/nf-core/flye/main'
+include { RASUSA                      } from '../modules/nf-core/rasusa/main'
+include { MINIMAP2_ALIGN              } from '../modules/nf-core/minimap2/align/main'
+include { SAMTOOLS_FASTQ              } from '../modules/nf-core/samtools/fastq/main'
+include { SEQTK_SEQ                   } from '../modules/nf-core/seqtk/seq/main'
+include { SEQTK_SUBSEQ                } from '../modules/nf-core/seqtk/subseq/main'
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     RUN MAIN WORKFLOW
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-
-// Info required for completion email and summary
-def multiqc_report = []
 
 workflow MESSER {
 
@@ -75,9 +78,9 @@ workflow MESSER {
     // ! There is currently no tooling to help you write a sample sheet schema
 
     //
-    // MODULE: Run FastQC
+    // MODULE: Run nanoq
     //
-    FASTQC (
+    NANOQ (
         INPUT_CHECK.out.reads
     )
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
