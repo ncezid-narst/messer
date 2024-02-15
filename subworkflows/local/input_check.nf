@@ -28,6 +28,7 @@ def create_fastx_channel(LinkedHashMap row) {
     meta.contig     = row.contig
     meta.size       = row.target_size
     meta.replicon   = row.replicon
+    meta.single_end = true
 
     // add paths of the fastx files to the meta map
     def fastx_meta = []
