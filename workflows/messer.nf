@@ -21,10 +21,13 @@ WorkflowMesser.initialise(params, log)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+/*
+TODO add multiQC
 ch_multiqc_config          = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
 ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
 ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
 ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
+*/
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,7 +38,12 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 // SUBWORKFLOW: Consisting of a mix of local and nf-core/modules
 //
-include { INPUT_CHECK } from '../subworkflows/local/input_check'
+include { INPUT_CHECK    } from '../subworkflows/local/input_check'
+include { EXTRACT_CONTIG } from '../subworkflows/local/extract_contig'
+
+//
+// MODULE: local modules
+//
 include { NANOQ       } from '../modules/local/nanoq'
 
 /*
@@ -52,9 +60,6 @@ include { FLYE                        } from '../modules/nf-core/flye/main'
 include { RASUSA                      } from '../modules/nf-core/rasusa/main'
 include { MINIMAP2_ALIGN              } from '../modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_FASTQ              } from '../modules/nf-core/samtools/fastq/main'
-include { SEQTK_SEQ                   } from '../modules/nf-core/seqtk/seq/main'
-include { SEQTK_SUBSEQ                } from '../modules/nf-core/seqtk/subseq/main'
-
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,17 +83,66 @@ workflow MESSER {
     // ! There is currently no tooling to help you write a sample sheet schema
 
     //
-    // MODULE: Run nanoq
+    // SUBWORKFLOW: Run seqtk to extract contig of interest as fasta
+    //
+    EXTRACT_CONTIG (
+        INPUT_CHECK.out.files
+    )
+    ch_versions = ch_versions.mix(EXTRACT_CONTIG.out.versions)
+
+    //
+    // MODULE: Run minimap2 align to get allignment 
+    //
+    MINIMAP2_ALIGN (
+        [INPUT_CHECK.out.files[0], INPUT_CHECK.out.files[1][0]],
+        EXTRACT_CONTIG.out.contig_fasta,
+        true,
+        [],
+        []
+    )
+    ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
+
+    //
+    // MODULE: Run samtools fastq to get fastq from bam 
+    //
+    SAMTOOLS_FASTQ (
+        MINIMAP2_ALIGN.out.bam,
+        false
+    )
+    ch_versions = ch_versions.mix(SAMTOOLS_FASTQ.out.versions)
+
+    //
+    // MODULE: Run nanoq to filter fastq 
     //
     NANOQ (
-        INPUT_CHECK.out.reads
+        SAMTOOLS_FASTQ.out.fastq,
     )
-    ch_versions = ch_versions.mix(FASTQC.out.versions.first())
+    ch_versions = ch_versions.mix(NANOQ.out.versions)
+
+    //
+    // MODULE: Run rasusa to randomly downsample fastq 
+    //
+    RASUSA (
+        [NANOQ.out.fastq[0], NANOQ.out.fastq[1], INPUT_CHECK.out.files[0].size],
+        params.rasusa_coverage
+    )
+    ch_versions = ch_versions.mix(RASUSA.out.versions)
+
+    //
+    // MODULE: Run flye to assemble fastq 
+    //
+    FLYE (
+        RASUSA.out.reads,
+        params.flye_read_type
+    )
+    ch_versions = ch_versions.mix(FLYE.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
+    /*
+    TODO add multiQC
     //
     // MODULE: MultiQC
     //
@@ -111,6 +165,7 @@ workflow MESSER {
         ch_multiqc_logo.toList()
     )
     multiqc_report = MULTIQC.out.report.toList()
+    */
 }
 
 /*
@@ -119,6 +174,8 @@ workflow MESSER {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
+/*
+TODO add completion email ...
 workflow.onComplete {
     if (params.email || params.email_on_fail) {
         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
@@ -129,6 +186,7 @@ workflow.onComplete {
         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
     }
 }
+*/
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
