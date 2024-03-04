@@ -16,9 +16,7 @@ workflow EXTRACT_CONTIG {
         filter_list = file('filter_list.txt')
         filter_list.text = $meta.contig
 
-        fasta = $files.get(1)
-
-        SEQTK_SEQ1(meta, fasta)
+        SEQTK_SEQ1(meta, files[1])
         ch_versions = ch_versions.mix(SEQTK_SEQ1.out.versions)
         ch_extracted_fastq = SEQTK_SEQ1.out.fastx[1]
 
