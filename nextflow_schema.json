@@ -45,24 +45,6 @@
                 }
             }
         },
-        "reference_genome_options": {
-            "title": "Reference genome options",
-            "type": "object",
-            "fa_icon": "fas fa-dna",
-            "description": "Reference genome related files and options required for the workflow.",
-            "properties": {
-                "fasta": {
-                    "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "mimetype": "text/plain",
-                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
-                    "description": "Path to FASTA genome file.",
-                    "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
-                    "fa_icon": "far fa-file-code"
-                }
-            }
-        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",
@@ -270,9 +252,6 @@
             "$ref": "#/definitions/input_output_options"
         },
         {
-            "$ref": "#/definitions/reference_genome_options"
-        },
-        {
             "$ref": "#/definitions/institutional_config_options"
         },
         {
@@ -281,5 +260,32 @@
         {
             "$ref": "#/definitions/generic_options"
         }
-    ]
+    ],
+    "properties": {
+        "flye_read_type": {
+            "type": "string",
+            "default": "--nano-hq",
+            "description": "Type of sequencing technology used to generate reads. See flye documentation for details"
+        },
+        "flye_min_overlap": {
+            "type": "integer",
+            "default": 3000,
+            "description": "Minimum overlap between reads. See flye documentation for details."
+        },
+        "nanoq_min_length": {
+            "type": "integer",
+            "default": 1000,
+            "description": "Minimum length for fastq read filtering."
+        },
+        "nanoq_max_length": {
+            "type": "integer",
+            "default": 4000,
+            "description": "Maximum length for fastq read filtering."
+        },
+        "rasusa_coverage": {
+            "type": "integer",
+            "default": 120,
+            "description": "Coverage to down sample to.  See rarsusa documentation for details"
+        }
+    }
 }

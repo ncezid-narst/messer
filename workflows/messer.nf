@@ -21,13 +21,13 @@ WorkflowMesser.initialise(params, log)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-/*
-TODO add multiQC
+
+// TODO add multiQC
 ch_multiqc_config          = Channel.fromPath("$projectDir/assets/multiqc_config.yml", checkIfExists: true)
 ch_multiqc_custom_config   = params.multiqc_config ? Channel.fromPath( params.multiqc_config, checkIfExists: true ) : Channel.empty()
 ch_multiqc_logo            = params.multiqc_logo   ? Channel.fromPath( params.multiqc_logo, checkIfExists: true ) : Channel.empty()
 ch_multiqc_custom_methods_description = params.multiqc_methods_description ? file(params.multiqc_methods_description, checkIfExists: true) : file("$projectDir/assets/methods_description_template.yml", checkIfExists: true)
-*/
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -44,7 +44,7 @@ include { EXTRACT_CONTIG } from '../subworkflows/local/extract_contig'
 //
 // MODULE: local modules
 //
-include { NANOQ       } from '../modules/local/nanoq'
+// include { NANOQ          } from '../modules/local/nanoq'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,6 +60,7 @@ include { FLYE                        } from '../modules/nf-core/flye/main'
 include { RASUSA                      } from '../modules/nf-core/rasusa/main'
 include { MINIMAP2_ALIGN              } from '../modules/nf-core/minimap2/align/main'
 include { SAMTOOLS_FASTQ              } from '../modules/nf-core/samtools/fastq/main'
+include { MULTIQC                     } from '../modules/nf-core/multiqc/main'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,16 +86,18 @@ workflow MESSER {
     //
     // SUBWORKFLOW: Run seqtk to extract contig of interest as fasta
     //
+    ch_input_fasta = INPUT_CHECK.out.files.map { meta, files -> tuple ( meta, files.get(1)) }
     EXTRACT_CONTIG (
-        INPUT_CHECK.out.files
+        ch_input_fasta
     )
     ch_versions = ch_versions.mix(EXTRACT_CONTIG.out.versions)
 
     //
     // MODULE: Run minimap2 align to get allignment 
     //
+    ch_input_minimap2 = INPUT_CHECK.out.files.map { meta, files -> tuple ( meta, files.get(0)) }
     MINIMAP2_ALIGN (
-        [INPUT_CHECK.out.files[0], INPUT_CHECK.out.files[1][0]],
+        ch_input_minimap2,
         EXTRACT_CONTIG.out.contig_fasta,
         true,
         [],
@@ -114,35 +117,40 @@ workflow MESSER {
     //
     // MODULE: Run nanoq to filter fastq 
     //
-    NANOQ (
-        SAMTOOLS_FASTQ.out.fastq,
-    )
-    ch_versions = ch_versions.mix(NANOQ.out.versions)
+    // ch_nanoq_input = SAMTOOLS_FASTQ.out.fastq.map { meta, fastq1, fastq2 -> tuple (meta, fastq1) }
+    // NANOQ (
+    //     SAMTOOLS_FASTQ.out.fastq
+    // )
+    // ch_versions = ch_versions.mix(NANOQ.out.versions)
 
-    //
-    // MODULE: Run rasusa to randomly downsample fastq 
-    //
-    RASUSA (
-        [NANOQ.out.fastq[0], NANOQ.out.fastq[1], INPUT_CHECK.out.files[0].size],
-        params.rasusa_coverage
-    )
-    ch_versions = ch_versions.mix(RASUSA.out.versions)
+    // //
+    // // MODULE: Run rasusa to randomly downsample fastq 
+    // //
+    // ch_rasusa_input = NANOQ.out.fastq.concat( 
+    //     INPUT_CHECK.out.files.map(meta).map(size)
+    // )
+    // ch_rasusa_input.view()
+    // RASUSA (
+    //     ch_rasusa_input,
+    //     params.rasusa_coverage
+    // )
+    // ch_versions = ch_versions.mix(RASUSA.out.versions)
 
-    //
-    // MODULE: Run flye to assemble fastq 
-    //
-    FLYE (
-        RASUSA.out.reads,
-        params.flye_read_type
-    )
-    ch_versions = ch_versions.mix(FLYE.out.versions)
+    // //
+    // // MODULE: Run flye to assemble fastq 
+    // //
+    // FLYE (
+    //     RASUSA.out.reads,
+    //     params.flye_read_type
+    // )
+    // ch_versions = ch_versions.mix(FLYE.out.versions)
 
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
-    /*
-    TODO add multiQC
+    
+    // TODO add multiQC
     //
     // MODULE: MultiQC
     //
@@ -156,7 +164,7 @@ workflow MESSER {
     ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
     ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+    // ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
     MULTIQC (
         ch_multiqc_files.collect(),
@@ -165,7 +173,7 @@ workflow MESSER {
         ch_multiqc_logo.toList()
     )
     multiqc_report = MULTIQC.out.report.toList()
-    */
+    
 }
 
 /*
@@ -174,8 +182,8 @@ workflow MESSER {
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-/*
-TODO add completion email ...
+
+// TODO add completion email ...
 workflow.onComplete {
     if (params.email || params.email_on_fail) {
         NfcoreTemplate.email(workflow, params, summary_params, projectDir, log, multiqc_report)
@@ -186,7 +194,7 @@ workflow.onComplete {
         NfcoreTemplate.IM_notification(workflow, params, summary_params, projectDir, log)
     }
 }
-*/
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

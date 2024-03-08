@@ -124,7 +124,7 @@ class RowChecker:
             raise AssertionError("The target size is required.")
         elif not row[self._fourth_col].isdigit():
             raise AssertionError("The target size should be an integer greater than 0")
-        elif int(row[self._fourth_col]) > 0:
+        elif int(row[self._fourth_col]) <= 0:
             raise AssertionError("The target size should be an integer greater than 0")
             
     def _validate_fifth(self, row):
