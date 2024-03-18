@@ -95,24 +95,24 @@ workflow MESSER {
     //
     // MODULE: Run minimap2 align to get allignment 
     //
-    ch_input_minimap2 = INPUT_CHECK.out.files.map { meta, files -> tuple ( meta, files.get(0)) }
-    MINIMAP2_ALIGN (
-        ch_input_minimap2,
-        EXTRACT_CONTIG.out.contig_fasta,
-        true,
-        [],
-        []
-    )
-    ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
+    // ch_input_minimap2 = INPUT_CHECK.out.files.map { meta, files -> tuple ( meta, files.get(0)) }
+    // MINIMAP2_ALIGN (
+    //     ch_input_minimap2,
+    //     EXTRACT_CONTIG.out.contig_fasta,
+    //     true,
+    //     [],
+    //     []
+    // )
+    // ch_versions = ch_versions.mix(MINIMAP2_ALIGN.out.versions)
 
-    //
-    // MODULE: Run samtools fastq to get fastq from bam 
-    //
-    SAMTOOLS_FASTQ (
-        MINIMAP2_ALIGN.out.bam,
-        false
-    )
-    ch_versions = ch_versions.mix(SAMTOOLS_FASTQ.out.versions)
+    // //
+    // // MODULE: Run samtools fastq to get fastq from bam 
+    // //
+    // SAMTOOLS_FASTQ (
+    //     MINIMAP2_ALIGN.out.bam,
+    //     false
+    // )
+    // ch_versions = ch_versions.mix(SAMTOOLS_FASTQ.out.versions)
 
     //
     // MODULE: Run nanoq to filter fastq 
@@ -154,25 +154,25 @@ workflow MESSER {
     //
     // MODULE: MultiQC
     //
-    workflow_summary    = WorkflowMesser.paramsSummaryMultiqc(workflow, summary_params)
-    ch_workflow_summary = Channel.value(workflow_summary)
+    // workflow_summary    = WorkflowMesser.paramsSummaryMultiqc(workflow, summary_params)
+    // ch_workflow_summary = Channel.value(workflow_summary)
 
-    methods_description    = WorkflowMesser.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description, params)
-    ch_methods_description = Channel.value(methods_description)
+    // methods_description    = WorkflowMesser.methodsDescriptionText(workflow, ch_multiqc_custom_methods_description, params)
+    // ch_methods_description = Channel.value(methods_description)
 
-    ch_multiqc_files = Channel.empty()
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
-    ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
-    // ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
+    // ch_multiqc_files = Channel.empty()
+    // ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
+    // ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml'))
+    // ch_multiqc_files = ch_multiqc_files.mix(CUSTOM_DUMPSOFTWAREVERSIONS.out.mqc_yml.collect())
+    // // ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]}.ifEmpty([]))
 
-    MULTIQC (
-        ch_multiqc_files.collect(),
-        ch_multiqc_config.toList(),
-        ch_multiqc_custom_config.toList(),
-        ch_multiqc_logo.toList()
-    )
-    multiqc_report = MULTIQC.out.report.toList()
+    // MULTIQC (
+    //     ch_multiqc_files.collect(),
+    //     ch_multiqc_config.toList(),
+    //     ch_multiqc_custom_config.toList(),
+    //     ch_multiqc_logo.toList()
+    // )
+    // multiqc_report = MULTIQC.out.report.toList()
     
 }
 
