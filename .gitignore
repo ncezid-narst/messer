@@ -7,3 +7,4 @@ testing/
 testing*
 *.pyc
 modules/local/nanoq.bak_20240202/
+nextflow.config.bak

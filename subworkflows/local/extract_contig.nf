@@ -16,31 +16,27 @@ workflow EXTRACT_CONTIG {
 
         ch_versions = Channel.empty()
 
-        // convert contig name to file as required by seqtk subseq
-        fasta
-            .map { meta, fasta -> meta.contig }
-            .collectFile(name: 'filter_list_${meta.contig}.txt', newLine: true)
-        filter_list = Channel.fromPath('filter_list_${meta.contig}.txt')
-        meta = fasta.map { meta, fasta -> meta }
+        // extract meta channel
+        meta = fasta.map { meta, fasta -> meta } // [id, contig, size, replicon, single_end, filter_list]
+        // create filter_list for subseq to use
+        filter_list = fasta
+            .map{it[0]}
+            .collectFile() {
+                item -> [ item.id + ".txt", item.contig + "\n" ]
+            }
 
         SEQTK_SEQ1(fasta)
         ch_versions = ch_versions.mix(SEQTK_SEQ1.out.versions)
-        ch_extracted_fastq = SEQTK_SEQ1.out.fastx.collect{it[1]}
-        ch_extracted_fastq.view()
 
-        SEQTK_SUBSEQ(ch_extracted_fastq, filter_list)
+
+        SEQTK_SUBSEQ(SEQTK_SEQ1.out.fastx, filter_list)
         ch_versions = ch_versions.mix(SEQTK_SUBSEQ.out.versions )
-        // SEQTK_SUBSEQ.out.view()
-        // ch_fastq_contig = meta.map { meta -> [meta] }
-        //     .concat(SEQTK_SUBSEQ.out.sequences)
+        
 
-        // SEQTK_SEQ2(
-        //     meta.map { meta -> [meta] }
-        //     .concat(SEQTK_SUBSEQ.out.sequences)
-        // )
-        // ch_versions = ch_versions.mix(SEQTK_SEQ2.out.versions )
+        SEQTK_SEQ2(SEQTK_SUBSEQ.out.sequences)
+        ch_versions = ch_versions.mix(SEQTK_SEQ2.out.versions )
 
     emit:
-        contig_fasta = SEQTK_SEQ1.out.fastx
+        contig_fasta = SEQTK_SEQ2.out.fastx
         versions     = ch_versions          
     }
